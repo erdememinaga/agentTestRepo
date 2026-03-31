@@ -1,0 +1,41 @@
+name: AI Code Review
+
+# Runs automatically on every push to any branch.
+# Posts an AI-generated review as a commit comment.
+#
+# Prerequisites
+# -------------
+# Add your OpenAI API key as a repository secret named OPENAI_API_KEY:
+#   Settings → Secrets and variables → Actions → New repository secret
+
+on:
+  push:
+    branches: ["**"]
+
+permissions:
+  contents: write  # required to post commit comments
+
+jobs:
+  review:
+    name: AI Code Review
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch the previous commit so we can compute the diff
+          fetch-depth: 2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run AI code review
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+        run: python .github/scripts/ai_review.py
